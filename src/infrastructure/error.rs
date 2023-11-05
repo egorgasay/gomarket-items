@@ -1,5 +1,5 @@
-use diesel::r2d2;
 pub use actix_threadpool::{run, BlockingError};
+use diesel::r2d2;
 use crate::domain::error::RepositoryError;
 
 pub type AsyncPoolError <T> = BlockingError<T>;
@@ -13,8 +13,8 @@ impl DieselRepositoryError {
     }
 }
 
-impl From<r2d2::Error> for DieselRepositoryError {
-    fn from(error: r2d2::Error) -> DieselRepositoryError {
+impl From<r2d2::PoolError> for DieselRepositoryError {
+    fn from(error: r2d2::PoolError) -> DieselRepositoryError {
         DieselRepositoryError(RepositoryError {
             message: error.to_string(),
         })

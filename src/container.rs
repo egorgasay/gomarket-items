@@ -3,9 +3,9 @@ use crate::domain::repositories::todo::Repository;
 use crate::domain::services::service_context::ServiceContextService;
 use crate::domain::services::order::CoreService;
 use crate::infrastructure::databases::postgresql::db_pool;
-use crate::infrastructure::repositories::order::DieselRepository;
+use crate::infrastructure::repositories::mechanic::DieselRepository;
 //use crate::infrastructure::services::service_context::ServiceContextServiceImpl;
-use crate::services::todo::CoreServiceImpl;
+use crate::services::mechanic::CoreServiceImpl;
 
 pub struct Container {
     pub core_service: Arc<dyn CoreService>,

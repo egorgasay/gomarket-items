@@ -4,6 +4,7 @@ use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::Logger;
 use crate::api::controllers::order_handler::{register_order};
+use crate::api::controllers::mechanic_handler::{new_mechanic};
 //use crate::api::middleware::{ServiceContextMaintenanceCheck};
 use crate::container::Container;
 
@@ -26,7 +27,7 @@ pub fn create_app() -> App<
         .wrap(Logger::default())
         //.wrap(ServiceContextMaintenanceCheck)
         .service(
-            web::scope("/")
-                .route("", web::post().to(register_order))
+            web::scope("")
+                .route("/v1/mechanics", web::post().to(new_mechanic)),
         )
 }

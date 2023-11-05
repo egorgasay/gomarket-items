@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use crate::api::dto::order::NewOrderDTO;
 
 use crate::domain::error::CommonError;
-use crate::domain::models::order::{NewOrder};
+use crate::domain::models::order::{Mechanic, NewOrder};
 use crate::domain::repositories::repository::ResultPaging;
 use crate::domain::repositories::todo::{TodoQueryParams, Repository};
 use crate::domain::services::order::CoreService;
@@ -24,10 +24,13 @@ impl CoreServiceImpl {
 
 #[async_trait]
 impl CoreService for CoreServiceImpl {
-    async fn register_order(&self, todo: NewOrder) -> Result<(), CommonError> {
-        let mut cloned = todo.clone();
+    async fn register_order(&self, order: NewOrder) -> Result<(), CommonError> {
+        Ok(())
+    }
+
+    async fn new_mechanic(&self, mechanic: Mechanic) -> Result<(), CommonError> {
         self.repository
-            .register_order(&mut cloned)
+            .new_mechanic(mechanic.into())
             .await
             .map_err(|e| -> CommonError { e.into() })
     }

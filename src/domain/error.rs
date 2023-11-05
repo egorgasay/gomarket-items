@@ -1,4 +1,7 @@
+use diesel::r2d2;
+use diesel::r2d2::Error;
 use serde::Serialize;
+use crate::infrastructure::error::AsyncPoolError;
 
 #[derive(Debug, Serialize)]
 pub struct CommonError {
@@ -47,8 +50,33 @@ impl Into<CommonError> for RepositoryError {
     }
 }
 
-impl From<actix_threadpool::BlockingError<diesel::result::Error>> for RepositoryError {
-    fn from(error: actix_threadpool::BlockingError<diesel::result::Error>) -> RepositoryError {
+impl From<r2d2::PoolError> for RepositoryError {
+    fn from(value: r2d2::PoolError) -> Self {
+        RepositoryError {
+            message: value.to_string(),
+        }
+    }
+}
+
+impl From<actix_web::error::BlockingError> for RepositoryError {
+    fn from(error: actix_web::error::BlockingError) -> RepositoryError {
+        RepositoryError {
+            message: error.to_string(),
+        }
+    }
+}
+
+impl<T: std::fmt::Debug> From<AsyncPoolError<T>> for RepositoryError {
+    fn from(error: AsyncPoolError<T>) -> RepositoryError {
+        RepositoryError {
+            message: error.to_string(),
+        }
+    }
+}
+
+
+impl From<diesel::result::Error> for RepositoryError {
+    fn from(error: diesel::result::Error) -> RepositoryError {
         RepositoryError {
             message: error.to_string(),
         }

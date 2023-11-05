@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::domain::repositories::repository::{QueryParams, ResultPaging, RepositoryResult, DEFAULT_LIMIT, DEFAULT_OFFSET};
-use crate::domain::models::order::{NewOrder};
+use crate::domain::repositories::repository::{QueryParams, RepositoryResult, DEFAULT_LIMIT, DEFAULT_OFFSET};
+use crate::infrastructure::models::mechanic::MechanicDiesel;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoQueryParams {
@@ -21,5 +21,6 @@ impl QueryParams for TodoQueryParams {
 
 #[async_trait]
 pub trait Repository: Send + Sync {
-    async fn register_order(&self, new_order: &NewOrder) -> RepositoryResult<()>;
+    async fn new_mechanic(&self, mechanic: MechanicDiesel) -> RepositoryResult<()>;
+
 }

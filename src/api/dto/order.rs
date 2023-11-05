@@ -1,4 +1,4 @@
-use crate::domain::models::order::{NewOrder, Good};
+use crate::domain::models::order::{NewOrder, Good, Mechanic, RewardType};
 use serde::{Serialize, Deserialize};
 
 #[derive(Deserialize, Serialize)]
@@ -13,6 +13,14 @@ pub struct NewOrderDTO {
     pub goods: Vec<GoodDTO>
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct MechanicDTO {
+    #[serde(rename = "match")]
+    pub match_word: String,
+    pub reward: f64,
+    pub reward_type: String
+}
+
 impl Into<NewOrder> for NewOrderDTO {
     fn into(self) -> NewOrder {
         NewOrder {
@@ -23,6 +31,24 @@ impl Into<NewOrder> for NewOrderDTO {
                     good.into()
                 )
                 .collect(),
+        }
+    }
+}
+
+impl Into<Mechanic> for MechanicDTO {
+    fn into(self) -> Mechanic {
+        Mechanic {
+            match_word: self.match_word,
+            reward: self.reward,
+            reward_type: {
+                match self.reward_type.as_str() {
+                    "pt" => RewardType::Fixed,
+                    "%" => RewardType::Percent,
+                    _ => {
+                        panic!("Unknown reward type: {}", self.reward_type)
+                    }
+                }
+            },
         }
     }
 }

@@ -1,14 +1,14 @@
 use actix_web::{web, Result, HttpResponse};
-use crate::api::dto::order::{NewOrderDTO};
+use crate::api::dto::order::{MechanicDTO, NewOrderDTO};
 use crate::domain::error::{ApiError, CommonError};
 use crate::domain::models::order::NewOrder;
 use crate::domain::services::order::CoreService;
 
-pub async fn register_order(
-    core_service: web::Data<dyn CoreService>, post_data: web::Json<NewOrderDTO>,
+pub async fn new_mechanic(
+    core_service: web::Data<dyn CoreService>, post_data: web::Json<MechanicDTO>,
 ) -> Result<HttpResponse, ApiError> {
     core_service
-        .register_order(post_data.into_inner().into())
+        .new_mechanic(post_data.into_inner().into())
         .await?;
 
     Ok(HttpResponse::Ok().finish())
