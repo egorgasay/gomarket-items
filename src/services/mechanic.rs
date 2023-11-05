@@ -6,7 +6,7 @@ use crate::api::dto::order::NewOrderDTO;
 use crate::domain::error::CommonError;
 use crate::domain::models::order::{Mechanic, NewOrder};
 use crate::domain::repositories::repository::ResultPaging;
-use crate::domain::repositories::todo::{TodoQueryParams, Repository};
+use crate::domain::repositories::mechanic::{TodoQueryParams, Repository};
 use crate::domain::services::order::CoreService;
 
 #[derive(Clone)]

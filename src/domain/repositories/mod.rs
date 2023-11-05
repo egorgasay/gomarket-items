@@ -1,2 +1,2 @@
-pub mod todo;
+pub mod mechanic;
 pub mod repository;

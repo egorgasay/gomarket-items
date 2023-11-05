@@ -7,9 +7,8 @@ use log::log;
 use crate::domain::error::RepositoryError;
 
 use crate::domain::repositories::repository::{RepositoryResult};
-use crate::domain::repositories::todo::{Repository};
+use crate::domain::repositories::mechanic::{Repository};
 use crate::infrastructure::databases::postgresql::DBConn;
-use crate::infrastructure::error::*;
 use crate::infrastructure::models::mechanic::{MechanicDiesel};
 use crate::infrastructure::schema::mechanics::dsl::mechanics;
 

@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::domain::repositories::todo::Repository;
+use crate::domain::repositories::mechanic::Repository;
 use crate::domain::services::service_context::ServiceContextService;
 use crate::domain::services::order::CoreService;
 use crate::infrastructure::databases::postgresql::db_pool;
