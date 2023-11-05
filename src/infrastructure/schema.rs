@@ -1,39 +1,30 @@
 // @generated automatically by Diesel CLI.
-//
-// diesel::table! {
-//     service_contexts (id) {
-//         id -> Int4,
-//         maintenance -> Bool,
-//     }
-// }
-
-diesel::table! {
-    orders (id) {
-        id -> Varchar,
-        title -> Varchar,
-        description -> Text,
-        completed -> Bool,
-    }
-}
 
 diesel::table! {
     goods (id) {
         id -> Varchar,
-        price -> Double,
+        price -> Float8,
     }
 }
 
 diesel::table! {
-    orders_goods (order_id, good_id) {
-        order_id -> Varchar, // внешний ключ на таблицу orders
-        good_id -> Varchar, // внешний ключ на таблицу goods
+    orders (id) {
+        id -> Varchar,
     }
 }
 
+diesel::table! {
+    orders_goods (order_id) {
+        order_id -> Varchar,
+        good_id -> Nullable<Varchar>,
+    }
+}
+
+diesel::joinable!(orders_goods -> goods (good_id));
+diesel::joinable!(orders_goods -> orders (order_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    // service_contexts,
+    goods,
     orders,
     orders_goods,
-    goods,
 );

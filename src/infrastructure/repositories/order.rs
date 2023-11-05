@@ -1,14 +1,18 @@
 use std::sync::Arc;
-use actix_threadpool::run;
+use actix_threadpool::{BlockingError, run};
 use async_trait::async_trait;
 use diesel::prelude::*;
+use diesel::result::Error;
 
 use crate::domain::models::order::{NewOrder, Good};
 use crate::domain::repositories::repository::{QueryParams, RepositoryResult, ResultPaging};
 use crate::domain::repositories::todo::{TodoQueryParams, Repository};
 use crate::infrastructure::error::DieselRepositoryError;
 use crate::infrastructure::databases::postgresql::DBConn;
-use crate::infrastructure::models::orders::{NewOrderDiesel, GoodDiesel};
+use crate::infrastructure::models::orders::{OrderDiesel, GoodDiesel, split_new_order};
+use crate::infrastructure::schema::goods::dsl::goods;
+use crate::infrastructure::schema::orders_goods::dsl::orders_goods;
+use crate::infrastructure::schema::orders::dsl::orders;
 
 pub struct DieselRepository {
     pub pool: Arc<DBConn>
@@ -24,13 +28,42 @@ impl DieselRepository {
 impl Repository for DieselRepository {
 
     async fn register_order(&self, new_order: &NewOrder) -> RepositoryResult<()> {
-        use crate::infrastructure::schema::orders::dsl::orders;
-        let new_order_diesel: NewOrderDiesel = NewOrderDiesel::from(new_order.clone());
+        let (
+            order_diesel,
+            goods_diesel,
+            orders_goods_diesel,
+        ) = split_new_order(new_order.clone());
+
+
+        let pool = self.pool.clone();
+        run(move || {
+            diesel::insert_into(orders)
+                .values(order_diesel)
+                .on_conflict_do_nothing()
+                .execute(&mut pool.get().unwrap())
+        })
+            .await?;
+
+        for good in goods_diesel {
+            let mut conn = self.pool.get().unwrap();
+            run(move || {
+                diesel::insert_into(goods)
+                    .values(good.clone())
+                    .on_conflict_do_nothing() // TODO: ref
+                    .execute(&mut conn)
+            })
+                .await?;
+        }
+
         let mut conn = self.pool.get().unwrap();
-        let result: NewOrderDiesel = run(move || diesel::insert_into(orders).values(new_order_diesel)
-            .get_result(&mut conn))
-            .await
-            .map_err(|v| DieselRepositoryError::from(v).into_inner())?;
+        run(move || {
+            diesel::insert_into(orders_goods)
+                .values(orders_goods_diesel)
+                .on_conflict_do_nothing()
+                .execute(&mut conn)
+        })
+            .await?;
+
         Ok(())
     }
     //

@@ -46,3 +46,11 @@ impl Into<CommonError> for RepositoryError {
         }
     }
 }
+
+impl From<actix_threadpool::BlockingError<diesel::result::Error>> for RepositoryError {
+    fn from(error: actix_threadpool::BlockingError<diesel::result::Error>) -> RepositoryError {
+        RepositoryError {
+            message: error.to_string(),
+        }
+    }
+}

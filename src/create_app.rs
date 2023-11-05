@@ -4,7 +4,7 @@ use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::Logger;
 use crate::api::controllers::order_handler::{register_order};
-use crate::api::middleware::{ServiceContextMaintenanceCheck};
+//use crate::api::middleware::{ServiceContextMaintenanceCheck};
 use crate::container::Container;
 
 pub fn create_app() -> App<
@@ -24,9 +24,9 @@ pub fn create_app() -> App<
         .app_data(web::Data::from(todo_service.clone()))
         // .app_data(web::Data::from(service_context_service.clone()))
         .wrap(Logger::default())
-        .wrap(ServiceContextMaintenanceCheck)
+        //.wrap(ServiceContextMaintenanceCheck)
         .service(
             web::scope("/")
-                .route("v1/orders", web::post().to(register_order))
+                .route("", web::post().to(register_order))
         )
 }

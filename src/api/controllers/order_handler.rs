@@ -1,13 +1,21 @@
 use actix_web::{web, Result, HttpResponse};
 use crate::api::dto::order::{NewOrderDTO};
-use crate::domain::error::{ApiError};
+use crate::domain::error::{ApiError, CommonError};
 use crate::domain::models::order::NewOrder;
 use crate::domain::services::order::CoreService;
 
 pub async fn register_order(
-    todo_service: web::Data<dyn CoreService>, post_data: web::Json<NewOrderDTO>,
+    core_service: web::Data<dyn CoreService>, post_data: web::Json<NewOrderDTO>,
 ) -> Result<HttpResponse, ApiError> {
-    todo_service.register_order(post_data.into_inner().into()).await?;
+    let y = core_service
+        .register_order(post_data.into_inner().into())
+        .await;
+
+    match y {
+        Ok(_) => Ok(HttpResponse::Ok().finish()),
+        Err(e) => Err(ApiError::from(e)),
+    }?;
+
     Ok(HttpResponse::Ok().finish())
 }
 

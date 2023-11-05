@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Deserialize, Serialize)]
 pub struct GoodDTO {
     pub description: String,
-    pub price: i32
+    pub price: f64
 }
 
 #[derive(Deserialize, Serialize)]
