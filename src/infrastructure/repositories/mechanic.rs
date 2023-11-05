@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use actix_threadpool::run;
 use actix_web::web::block;
+use aerospike::Client;
 use async_trait::async_trait;
 use diesel::prelude::*;
 use log::log;
@@ -27,7 +28,7 @@ impl Repository for DieselRepository {
     async fn new_mechanic(&self, mechanic: MechanicDiesel) -> RepositoryResult<()> {
         let pool = self.pool.clone();
         let mut conn = pool.get()?;
-
+        Client::new()
         let _ = block(move || {
             diesel::insert_into(mechanics)
                 .values(mechanic)
