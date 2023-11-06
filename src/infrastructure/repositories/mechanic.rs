@@ -28,7 +28,6 @@ impl Repository for DieselRepository {
     async fn new_mechanic(&self, mechanic: MechanicDiesel) -> RepositoryResult<()> {
         let pool = self.pool.clone();
         let mut conn = pool.get()?;
-        Client::new()
         let _ = block(move || {
             diesel::insert_into(mechanics)
                 .values(mechanic)
