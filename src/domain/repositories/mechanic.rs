@@ -1,7 +1,10 @@
+use crate::domain::models::item::GetItemsQuery;
+use crate::domain::repositories::repository::{
+    QueryParams, RepositoryResult, DEFAULT_LIMIT, DEFAULT_OFFSET,
+};
+use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SizeDiesel};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::domain::repositories::repository::{QueryParams, RepositoryResult, DEFAULT_LIMIT, DEFAULT_OFFSET};
-use crate::infrastructure::models::mechanic::MechanicDiesel;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoQueryParams {
@@ -21,6 +24,10 @@ impl QueryParams for TodoQueryParams {
 
 #[async_trait]
 pub trait Repository: Send + Sync {
-    async fn new_mechanic(&self, mechanic: MechanicDiesel) -> RepositoryResult<()>;
-
+    async fn get_items(
+        &self,
+        query: GetItemsQuery,
+        offset: i64,
+        limit: i64,
+    ) -> RepositoryResult<Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)>>;
 }

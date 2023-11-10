@@ -1,17 +1,23 @@
-use actix_web::{web, Result, HttpResponse};
-use crate::api::dto::order::{NewOrderDTO};
+use crate::api::dto::item::{GetItemsRequestDTO, ItemDTO};
 use crate::domain::error::{ApiError, CommonError};
-use crate::domain::models::order::NewOrder;
+use crate::domain::repositories::repository::ResultPaging;
 use crate::domain::services::order::CoreService;
+use actix_web::{web, HttpResponse, Result};
 
-pub async fn register_order(
-    core_service: web::Data<dyn CoreService>, post_data: web::Json<NewOrderDTO>,
-) -> Result<HttpResponse, ApiError> {
-    core_service
-        .register_order(post_data.into_inner().into())
+pub async fn get_items(
+    core_service: web::Data<dyn CoreService>,
+    data: web::Json<GetItemsRequestDTO>,
+) -> Result<web::Json<ResultPaging<ItemDTO>>, ApiError> {
+    let selection = core_service
+        .get_items(
+            data.query.clone().unwrap_or(Default::default()).into(),
+            data.offset,
+            data.limit,
+            "",
+        )
         .await?;
 
-    Ok(HttpResponse::Ok().finish())
+    Ok(web::Json(selection.into()))
 }
 
 // pub async fn list_todos_handler(

@@ -1,13 +1,16 @@
 use async_trait::async_trait;
 
 use crate::domain::error::CommonError;
-use crate::domain::models::order::{Mechanic, NewOrder};
+use crate::domain::models::item::{GetItemsQuery, Item};
 use crate::domain::repositories::repository::ResultPaging;
-use crate::domain::repositories::mechanic::TodoQueryParams;
 
 #[async_trait]
 pub trait CoreService: Sync + Send {
-    async fn register_order(&self, order: NewOrder) -> Result<(), CommonError>;
-    async fn new_mechanic(&self, mechanic: Mechanic) -> Result<(), CommonError>;
+    async fn get_items(
+        &self,
+        query: GetItemsQuery,
+        offset: i64,
+        limit: i64,
+        sort_by: &str,
+    ) -> Result<ResultPaging<Item>, CommonError>;
 }
-

@@ -1,10 +1,13 @@
+use crate::api::dto::item::ItemDTO;
+use crate::domain::error::RepositoryError;
+use crate::domain::models::item::Item;
 use serde::{Deserialize, Serialize};
-use crate::domain::error::{RepositoryError};
 
 pub type RepositoryResult<T> = Result<T, RepositoryError>;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ResultPaging<T> {
+    pub offset: i64,
     pub total: i64,
     pub items: Vec<T>,
 }
@@ -29,5 +32,15 @@ impl QueryParams for QueryParamsImpl {
     }
     fn offset(&self) -> i64 {
         self.offset.or(DEFAULT_OFFSET).unwrap_or_default()
+    }
+}
+
+impl Into<ResultPaging<ItemDTO>> for ResultPaging<Item> {
+    fn into(self) -> ResultPaging<ItemDTO> {
+        ResultPaging {
+            offset: self.offset,
+            total: self.total,
+            items: self.items.into_iter().map(|item| item.into()).collect(),
+        }
     }
 }

@@ -39,12 +39,8 @@ impl std::fmt::Display for ApiError {
 impl actix_web::ResponseError for ApiError {
     fn error_response(&self) -> actix_web::HttpResponse {
         match &self.0.code {
-            CommonErrorKind::AlreadyExists => {
-                actix_web::HttpResponse::Conflict().json(&self.0)
-            }
-            CommonErrorKind::NotFound => {
-                actix_web::HttpResponse::Gone().json(&self.0)
-            }
+            CommonErrorKind::AlreadyExists => actix_web::HttpResponse::Conflict().json(&self.0),
+            CommonErrorKind::NotFound => actix_web::HttpResponse::Gone().json(&self.0),
             CommonErrorKind::Unknown => {
                 actix_web::HttpResponse::InternalServerError().json(&self.0)
             }
@@ -65,21 +61,33 @@ pub enum RepositoryErrorKind {
     Unknown,
 }
 
-impl Into<CommonError> for RepositoryError {
-    fn into(self) -> CommonError {
+// impl Into<CommonError> for RepositoryError {
+//     fn into(self) -> CommonError {
+//         CommonError {
+//             message: self.message,
+//             code: match self.code {
+//                 RepositoryErrorKind::NotFound => CommonErrorKind::NotFound,
+//                 RepositoryErrorKind::UniqueViolation => CommonErrorKind::AlreadyExists,
+//                 RepositoryErrorKind::Unknown => CommonErrorKind::Unknown
+//             },
+//         }
+//     }
+// }
+
+impl From<RepositoryError> for CommonError {
+    fn from(error: RepositoryError) -> CommonError {
         CommonError {
-            message: self.message,
-            code: match self.code {
+            message: error.message,
+            code: match error.code {
                 RepositoryErrorKind::NotFound => CommonErrorKind::NotFound,
                 RepositoryErrorKind::UniqueViolation => CommonErrorKind::AlreadyExists,
-                RepositoryErrorKind::Unknown => CommonErrorKind::Unknown
+                RepositoryErrorKind::Unknown => CommonErrorKind::Unknown,
             },
         }
     }
 }
 
-
-pub type AsyncPoolError <T> = BlockingError<T>;
+pub type AsyncPoolError<T> = BlockingError<T>;
 impl From<r2d2::PoolError> for RepositoryError {
     fn from(value: r2d2::PoolError) -> Self {
         RepositoryError {
@@ -110,24 +118,21 @@ impl<T: std::fmt::Debug> From<AsyncPoolError<T>> for RepositoryError {
 impl From<diesel::result::Error> for RepositoryError {
     fn from(error: diesel::result::Error) -> RepositoryError {
         match error {
-            diesel::result::Error::DatabaseError(diesel::result::DatabaseErrorKind::UniqueViolation, info) => {
-                RepositoryError {
-                    message: info.message().to_string(),
-                    code: RepositoryErrorKind::UniqueViolation,
-                }
+            diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::UniqueViolation,
+                info,
+            ) => RepositoryError {
+                message: info.message().to_string(),
+                code: RepositoryErrorKind::UniqueViolation,
             },
-            diesel::result::Error::NotFound => {
-                RepositoryError {
-                    message: error.to_string(),
-                    code: RepositoryErrorKind::NotFound,
-                }
-            }
-            _ => {
-                RepositoryError {
-                    message: error.to_string(),
-                    code: RepositoryErrorKind::Unknown,
-                }
-            }
+            diesel::result::Error::NotFound => RepositoryError {
+                message: error.to_string(),
+                code: RepositoryErrorKind::NotFound,
+            },
+            _ => RepositoryError {
+                message: error.to_string(),
+                code: RepositoryErrorKind::Unknown,
+            },
         }
     }
 }

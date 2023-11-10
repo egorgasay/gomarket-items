@@ -1,9 +1,13 @@
 use std::future::{ready, Ready};
 
-use actix_web::{body::EitherBody, dev::{self, Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpResponse, web};
+use crate::domain::services::service_context::ServiceContextService;
+use actix_web::{
+    body::EitherBody,
+    dev::{self, Service, ServiceRequest, ServiceResponse, Transform},
+    web, Error, HttpResponse,
+};
 use futures_util::future::LocalBoxFuture;
 use log::info;
-use crate::domain::services::service_context::ServiceContextService;
 
 // pub struct ServiceContextMaintenanceCheck;
 //

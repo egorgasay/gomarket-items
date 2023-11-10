@@ -1,10 +1,9 @@
-use actix_web::{App, web};
-use actix_web::{Error};
+use crate::api::controllers::items_handler::get_items;
 use actix_web::body::MessageBody;
 use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::middleware::Logger;
-use crate::api::controllers::order_handler::{register_order};
-use crate::api::controllers::mechanic_handler::{new_mechanic};
+use actix_web::Error;
+use actix_web::{web, App};
 //use crate::api::middleware::{ServiceContextMaintenanceCheck};
 use crate::container::Container;
 
@@ -26,8 +25,5 @@ pub fn create_app() -> App<
         // .app_data(web::Data::from(service_context_service.clone()))
         .wrap(Logger::default())
         //.wrap(ServiceContextMaintenanceCheck)
-        .service(
-            web::scope("")
-                .route("/v1/mechanics", web::post().to(new_mechanic)),
-        )
+        .service(web::scope("").route("/v1/items", web::get().to(get_items)))
 }

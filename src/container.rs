@@ -1,11 +1,11 @@
-use std::sync::Arc;
 use crate::domain::repositories::mechanic::Repository;
-use crate::domain::services::service_context::ServiceContextService;
 use crate::domain::services::order::CoreService;
+use crate::domain::services::service_context::ServiceContextService;
 use crate::infrastructure::databases::postgresql::db_pool;
-use crate::infrastructure::repositories::mechanic::DieselRepository;
+use crate::infrastructure::repositories::items::DieselRepository;
+use std::sync::Arc;
 //use crate::infrastructure::services::service_context::ServiceContextServiceImpl;
-use crate::services::mechanic::CoreServiceImpl;
+use crate::services::items::CoreServiceImpl;
 
 pub struct Container {
     pub core_service: Arc<dyn CoreService>,
@@ -14,12 +14,8 @@ pub struct Container {
 
 impl Container {
     pub fn new() -> Self {
-        let repository: Arc<dyn Repository> = Arc::new(
-            DieselRepository::new(Arc::new(db_pool()))
-        );
-        let core_service = Arc::new(
-            CoreServiceImpl::new(repository)
-        );
+        let repository: Arc<dyn Repository> = Arc::new(DieselRepository::new(Arc::new(db_pool())));
+        let core_service = Arc::new(CoreServiceImpl::new(repository));
         // let service_context_service = Arc::new(
         //     ServiceContextServiceImpl::new(Arc::new(db_pool()))
         // );
