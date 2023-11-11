@@ -8,7 +8,7 @@ use crate::domain::repositories::repository::ResultPaging;
 pub trait CoreService: Sync + Send {
     async fn get_items(
         &self,
-        query: GetItemsQuery,
+        query: Option<GetItemsQuery>,
         offset: i64,
         limit: i64,
         sort_by: &str,

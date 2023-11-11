@@ -12,9 +12,9 @@ CREATE TABLE sizes (
 
 CREATE TABLE items_sizes (
     id BIGSERIAL PRIMARY KEY,
-    item_id BIGSERIAL,
-    size_id SERIAL,
-    quantity INTEGER,
+    item_id BIGSERIAL NOT NULL,
+    size_id SERIAL NOT NULL,
+    quantity INTEGER NOT NULL,
     FOREIGN KEY (item_id) REFERENCES items(id),
     FOREIGN KEY (size_id) REFERENCES sizes(id)
 );

@@ -45,17 +45,27 @@ pub struct ItemDTO {
 
 impl Into<GetItemsQuery> for GetItemsQueryDTO {
     fn into(self) -> GetItemsQuery {
-        GetItemsQuery {
-            ids: self.ids.unwrap_or(vec![]),
-            price: PriceGetItemsQuery {
-                from: self.price.unwrap_or(PriceGetItemsQueryDTO{ from: 0.0, to: 0.0}).from,
-                to: self.price.unwrap_or(PriceGetItemsQueryDTO{ from: 0.0, to: 0.0}).from,
-            },
-            names: NamesGetItemsQuery {
-                full: self.names.clone().unwrap_or(Default::default()).full,
-                partly: self.names.unwrap_or(Default::default()).partly,
-            },
+        let mut query = GetItemsQuery {
+            ..Default::default()
+        };
+
+        query.ids = self.ids;
+
+        if let Some(price) = self.price {
+            query.price = Some(PriceGetItemsQuery {
+                from: price.from,
+                to: price.to,
+            });
         }
+
+        if let Some(names) = self.names {
+            query.names = Some(NamesGetItemsQuery {
+                full: names.full,
+                partly: names.partly,
+            });
+        };
+
+        query
     }
 }
 

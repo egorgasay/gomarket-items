@@ -1,5 +1,6 @@
 use crate::api::dto::item::{GetItemsRequestDTO, ItemDTO};
 use crate::domain::error::{ApiError, CommonError};
+use crate::domain::models::item::GetItemsQuery;
 use crate::domain::repositories::repository::ResultPaging;
 use crate::domain::services::order::CoreService;
 use actix_web::{web, HttpResponse, Result};
@@ -8,13 +9,14 @@ pub async fn get_items(
     core_service: web::Data<dyn CoreService>,
     data: web::Json<GetItemsRequestDTO>,
 ) -> Result<web::Json<ResultPaging<ItemDTO>>, ApiError> {
+    let data = data.into_inner();
+    let mut query: Option<GetItemsQuery> = None;
+    if data.query.is_some() {
+        query = Some(data.query.clone().unwrap_or(Default::default()).into())
+    }
+
     let selection = core_service
-        .get_items(
-            data.query.clone().unwrap_or(Default::default()).into(),
-            data.offset,
-            data.limit,
-            "",
-        )
+        .get_items(query, data.offset, data.limit, "")
         .await?;
 
     Ok(web::Json(selection.into()))

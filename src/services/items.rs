@@ -24,14 +24,14 @@ impl CoreServiceImpl {
 impl CoreService for CoreServiceImpl {
     async fn get_items(
         &self,
-        query: GetItemsQuery,
+        query: Option<GetItemsQuery>,
         offset: i64,
         limit: i64,
         sort_by: &str,
     ) -> Result<ResultPaging<Item>, CommonError> {
         let items: Vec<Item> = self
             .repository
-            .get_items(query, 100, 0)
+            .get_items(query, offset, limit)
             .await?
             .into_iter()
             .map(
@@ -41,10 +41,10 @@ impl CoreService for CoreServiceImpl {
             )
             .collect();
 
-        Ok(ResultPaging{
+        Ok(ResultPaging {
             offset,
             total: items.len() as i64,
-            items
+            items,
         })
     }
 }

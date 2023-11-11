@@ -27,9 +27,9 @@ pub struct NamesGetItemsQuery {
     pub partly: Option<Vec<String>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct GetItemsQuery {
-    pub ids: Vec<i64>,
-    pub price: PriceGetItemsQuery,
-    pub names: NamesGetItemsQuery,
+    pub ids: Option<Vec<i64>>,
+    pub price: Option<PriceGetItemsQuery>,
+    pub names: Option<NamesGetItemsQuery>,
 }

@@ -25,6 +25,7 @@ pub struct SizeDiesel {
 #[diesel(table_name = items_sizes)]
 #[derive(Clone)]
 pub struct ItemsSizesDiesel {
+    pub id: i64,
     pub item_id: i64,
     pub size_id: i32,
     pub quantity: i32,
@@ -41,6 +42,7 @@ fn split_item_to_diesel(t: Item) -> (ItemDiesel, Vec<ItemsSizesDiesel>) {
         t.sizes
             .iter()
             .map(|s| ItemsSizesDiesel {
+                id: t.id,
                 item_id: t.id,
                 size_id: s.0.id,
                 quantity: s.1,
@@ -53,21 +55,30 @@ impl Into<Item> for (ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>) {
     fn into(self) -> Item {
         let mut sizes: Vec<(Size, i32)> = vec![];
 
-        for s in self.2 {
+        let find_size_name = Box::new(|x: &Self, isd: &ItemsSizesDiesel| {
+            for s in &self.1 {
+                if s.id == isd.size_id {
+                    return s.name.clone();
+                }
+            }
+            "".to_string()
+        });
+
+        for s in &self.2 {
             sizes.push((
                 Size {
                     id: s.size_id,
-                    name: self.1[0].name.clone(),
+                    name: find_size_name(&self, s),
                 },
                 s.quantity,
             ));
         }
 
         Item {
-            id: self.0.id,
-            name: self.0.name,
-            description: self.0.description,
-            price: self.0.price,
+            id: (&self).0.id,
+            name: (&self).0.name.clone(),
+            description: (&self).0.description.clone(),
+            price: (&self).0.price,
             sizes,
         }
     }

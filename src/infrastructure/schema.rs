@@ -14,7 +14,7 @@ diesel::table! {
         id -> Int8,
         item_id -> Int8,
         size_id -> Int4,
-        quantity -> Nullable<Int4>,
+        quantity -> Int4,
     }
 }
 

@@ -26,7 +26,7 @@ impl QueryParams for TodoQueryParams {
 pub trait Repository: Send + Sync {
     async fn get_items(
         &self,
-        query: GetItemsQuery,
+        query: Option<GetItemsQuery>,
         offset: i64,
         limit: i64,
     ) -> RepositoryResult<Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)>>;
