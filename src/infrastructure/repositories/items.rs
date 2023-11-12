@@ -1,4 +1,4 @@
-use crate::domain::models::item::{GetItemsQuery};
+use crate::domain::models::item::GetItemsQuery;
 use async_trait::async_trait;
 use diesel::prelude::*;
 use std::sync::Arc;
@@ -26,6 +26,7 @@ impl Repository for DieselRepository {
     async fn get_items(
         &self,
         query: Option<GetItemsQuery>,
+        sort_by: Option<String>,
         offset: i64,
         limit: i64,
     ) -> RepositoryResult<Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)>> {
@@ -53,14 +54,28 @@ impl Repository for DieselRepository {
                     }
 
                     if let Some(partly) = names.partly {
-                        for name in partly {
-                            select = select.or_filter(items::name.ilike(format!("%{}%", name)));
-                        }
+                        select = select.filter(
+                            items::name.ilike(
+                                partly
+                                    .iter()
+                                    .map(|el| format!("%{}%", el))
+                                    .collect::<Vec<String>>()
+                                    .join("OR ILIKE"),
+                            ),
+                        );
                     }
                 }
 
                 select = select.offset(offset).limit(limit)
             }
+
+            // if let Some(sort_by) = sort_by {
+            //     match sort_by.as_str() {
+            //         "name" => select = select.order_by(items::name),
+            //         &_ => select = select.order_by(items::id),
+            //     }
+            //     select = select.order_by(items::price.desc());
+            // }
 
             let res = select.load::<ItemDiesel>(conn)?;
 

@@ -25,13 +25,13 @@ impl CoreService for CoreServiceImpl {
     async fn get_items(
         &self,
         query: Option<GetItemsQuery>,
+        sort_by: Option<String>,
         offset: i64,
         limit: i64,
-        sort_by: &str,
     ) -> Result<ResultPaging<Item>, CommonError> {
         let items: Vec<Item> = self
             .repository
-            .get_items(query, offset, limit)
+            .get_items(query, sort_by, offset, limit)
             .await?
             .into_iter()
             .map(

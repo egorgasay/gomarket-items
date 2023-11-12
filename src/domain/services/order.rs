@@ -9,8 +9,8 @@ pub trait CoreService: Sync + Send {
     async fn get_items(
         &self,
         query: Option<GetItemsQuery>,
+        sort_by: Option<String>,
         offset: i64,
         limit: i64,
-        sort_by: &str,
     ) -> Result<ResultPaging<Item>, CommonError>;
 }

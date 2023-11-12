@@ -27,6 +27,7 @@ pub trait Repository: Send + Sync {
     async fn get_items(
         &self,
         query: Option<GetItemsQuery>,
+        sort_by: Option<String>,
         offset: i64,
         limit: i64,
     ) -> RepositoryResult<Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)>>;

@@ -4,6 +4,7 @@ use crate::domain::models::item::GetItemsQuery;
 use crate::domain::repositories::repository::ResultPaging;
 use crate::domain::services::order::CoreService;
 use actix_web::{web, HttpResponse, Result};
+use diesel::result::DatabaseErrorInformation;
 
 pub async fn get_items(
     core_service: web::Data<dyn CoreService>,
@@ -15,8 +16,14 @@ pub async fn get_items(
         query = Some(data.query.clone().unwrap_or(Default::default()).into())
     }
 
+    let sort_by = if let Some(sort_by) = data.sort_by {
+        Some(sort_by)
+    } else {
+        None
+    };
+
     let selection = core_service
-        .get_items(query, data.offset, data.limit, "")
+        .get_items(query, sort_by, data.offset, data.limit)
         .await?;
 
     Ok(web::Json(selection.into()))
