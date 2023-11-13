@@ -7,6 +7,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
     volumes:
       - ./pgdata:/var/lib/postgresql/data
 
@@ -18,6 +20,6 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://your_username:your_password@db:5432/your_database_name
+      DATABASE_URL: postgresql://postgres:1234@db:5432/postgres
     ports:
-      - 8000:8000
+      - "8000:8000"

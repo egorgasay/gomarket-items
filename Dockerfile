@@ -1,35 +1,34 @@
-# Use a Rust base image
-FROM rust:latest as builder
+# syntax=docker/dockerfile:1.4
+FROM rust:buster AS base
 
-# Set the working directory
-WORKDIR /app
+ENV USER=root
+ENV ROCKET_ADDRESS=0.0.0.0
+ENV ROCKET_ENV=development
 
-# Copy the Cargo.toml and Cargo.lock files
-COPY Cargo.lock Cargo.toml ./
+WORKDIR /code
+RUN cargo init
+COPY Cargo.toml /code/Cargo.toml
+RUN cargo fetch
+COPY . /code
 
-# Copy the source code
-COPY . .
+FROM base AS development
 
-# Build the project
-RUN cargo build  --target x86_64-unknown-linux-musl
-
-# Create the final Docker image
-FROM debian:buster-slim
-
-# Install PostgreSQL client
-RUN apt-get update && apt-get install -y postgresql-client
-
-# Set the working directory
-WORKDIR /app
-
-# Copy the built binary from the builder stage
-COPY --from=builder /app/target/x86_64-unknown-linux-musl/debug/gomarket-items .
-
-# Set the environment variables
-ENV DATABASE_URL=postgresql://postgres:1234@127.0.0.1:5432/postgres
-
-# Expose any necessary ports (e.g., for web applications)
 EXPOSE 8000
 
-# Run the binary
-CMD ["./gomarket-items"]
+CMD [ "diesel", "migration", "run", "--database-url=postgresql://postgres:1234@db:5432/postgres", "&&", "cargo", "run"]
+
+FROM base AS builder
+
+RUN cargo build
+
+FROM debian:buster-slim
+
+ENV DATABASE_URL=postgresql://postgres:1234@127.0.0.1:5432/postgres
+
+EXPOSE 8000
+
+RUN apt-get update && apt-get install -y libpq5
+
+COPY --from=builder /code/target/debug/gomarket-items /gomarket-items
+
+CMD [ "/gomarket-items" ]

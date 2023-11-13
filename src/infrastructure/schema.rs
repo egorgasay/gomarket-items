@@ -28,4 +28,8 @@ diesel::table! {
 diesel::joinable!(items_sizes -> items (item_id));
 diesel::joinable!(items_sizes -> sizes (size_id));
 
-diesel::allow_tables_to_appear_in_same_query!(items, items_sizes, sizes,);
+diesel::allow_tables_to_appear_in_same_query!(
+    items,
+    items_sizes,
+    sizes,
+);
