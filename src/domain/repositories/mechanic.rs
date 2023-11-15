@@ -6,6 +6,9 @@ use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SizeDie
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+use mockall::{predicate::*, *};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TodoQueryParams {
     pub limit: Option<i64>,
@@ -23,6 +26,7 @@ impl QueryParams for TodoQueryParams {
 }
 
 #[async_trait]
+#[cfg_attr(test, automock)]
 pub trait Repository: Send + Sync {
     async fn get_items(
         &self,
