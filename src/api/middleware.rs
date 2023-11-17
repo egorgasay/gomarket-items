@@ -7,8 +7,6 @@ use actix_web::{
     web, Error, HttpResponse,
 };
 use futures_util::future::LocalBoxFuture;
-use log::info;
-
 // pub struct ServiceContextMaintenanceCheck;
 //
 // impl<S, B> Transform<S, ServiceRequest> for ServiceContextMaintenanceCheck

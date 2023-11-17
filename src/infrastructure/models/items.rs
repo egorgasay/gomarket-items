@@ -1,11 +1,11 @@
-use crate::domain::models::item::{Item, Size};
+use crate::domain::models::items::{Item, Size};
 use crate::infrastructure::schema::{items, items_sizes, sizes};
 use diesel;
 use diesel::prelude::*;
 
 #[derive(Queryable, Insertable)]
 #[diesel(table_name = items)]
-#[derive(Clone)]
+#[derive(Clone,PartialEq,Debug)]
 pub struct ItemDiesel {
     pub id: i64,
     pub name: String,
@@ -15,7 +15,7 @@ pub struct ItemDiesel {
 
 #[derive(Queryable, Insertable)]
 #[diesel(table_name = sizes)]
-#[derive(Clone)]
+#[derive(Clone,PartialEq,Debug)]
 pub struct SizeDiesel {
     pub id: i32,
     pub name: String,
@@ -23,7 +23,7 @@ pub struct SizeDiesel {
 
 #[derive(Queryable, Insertable)]
 #[diesel(table_name = items_sizes)]
-#[derive(Clone)]
+#[derive(Clone,PartialEq,Debug)]
 pub struct ItemsSizesDiesel {
     pub id: i64,
     pub item_id: i64,

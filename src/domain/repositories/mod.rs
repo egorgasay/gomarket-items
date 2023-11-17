@@ -1,2 +1,2 @@
-pub mod mechanic;
+pub mod items;
 pub mod repository;

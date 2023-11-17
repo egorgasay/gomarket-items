@@ -1,6 +1,6 @@
 use crate::api::dto::item::ItemDTO;
 use crate::domain::error::RepositoryError;
-use crate::domain::models::item::Item;
+use crate::domain::models::items::Item;
 use serde::{Deserialize, Serialize};
 
 pub type RepositoryResult<T> = Result<T, RepositoryError>;

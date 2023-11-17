@@ -1,9 +1,9 @@
-use crate::domain::models::item::GetItemsQuery;
+use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy};
 use async_trait::async_trait;
 use diesel::prelude::*;
 use std::sync::Arc;
 
-use crate::domain::repositories::mechanic::Repository;
+use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::RepositoryResult;
 use crate::infrastructure::databases::postgresql::DBConn;
 use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SizeDiesel};
@@ -26,7 +26,7 @@ impl Repository for DieselRepository {
     async fn get_items(
         &self,
         query: Option<GetItemsQuery>,
-        sort_by: Option<String>,
+        sort_by: Option<GetItemsSortBy>,
         offset: i64,
         limit: i64,
     ) -> RepositoryResult<Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)>> {
@@ -69,13 +69,19 @@ impl Repository for DieselRepository {
                 select = select.offset(offset).limit(limit)
             }
 
-            // if let Some(sort_by) = sort_by {
-            //     match sort_by.as_str() {
-            //         "name" => select = select.order_by(items::name),
-            //         &_ => select = select.order_by(items::id),
-            //     }
-            //     select = select.order_by(items::price.desc());
-            // }
+            if let Some(sort_by) = sort_by {
+                let target = match (sort_by.field.as_str(), sort_by.desc) {
+                    ("price", true) => select.order_by(items::price.desc()),
+                    ("price", false) => select.order_by(items::price.asc()),
+                    ("name", true) => select.order_by(items::name.desc()),
+                    ("name", false) => select.order_by(items::name.asc()),
+                    ("id", true) => select.order_by(items::id.desc()),
+                    ("id", false) => select.order_by(items::id.asc()),
+                    (&_, _) => select.order_by(items::price.asc()),
+                };
+
+                 select = target
+            }
 
             let res = select.load::<ItemDiesel>(conn)?;
 

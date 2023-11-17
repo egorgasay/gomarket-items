@@ -61,19 +61,6 @@ pub enum RepositoryErrorKind {
     Unknown,
 }
 
-// impl Into<CommonError> for RepositoryError {
-//     fn into(self) -> CommonError {
-//         CommonError {
-//             message: self.message,
-//             code: match self.code {
-//                 RepositoryErrorKind::NotFound => CommonErrorKind::NotFound,
-//                 RepositoryErrorKind::UniqueViolation => CommonErrorKind::AlreadyExists,
-//                 RepositoryErrorKind::Unknown => CommonErrorKind::Unknown
-//             },
-//         }
-//     }
-// }
-
 impl From<RepositoryError> for CommonError {
     fn from(error: RepositoryError) -> CommonError {
         CommonError {

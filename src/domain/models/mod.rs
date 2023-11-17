@@ -1,2 +1,2 @@
-pub mod item;
+pub mod items;
 pub mod service_context;

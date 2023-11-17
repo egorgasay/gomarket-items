@@ -1,4 +1,4 @@
-use crate::domain::repositories::mechanic::Repository;
+use crate::domain::repositories::items::Repository;
 use crate::domain::services::order::CoreService;
 use crate::domain::services::service_context::ServiceContextService;
 use crate::infrastructure::databases::postgresql::db_pool;

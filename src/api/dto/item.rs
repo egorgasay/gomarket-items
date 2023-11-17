@@ -1,4 +1,4 @@
-use crate::domain::models::item::{GetItemsQuery, Item, NamesGetItemsQuery, PriceGetItemsQuery};
+use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item, NamesGetItemsQuery, PriceGetItemsQuery};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Copy, Clone, Default)]
@@ -20,12 +20,18 @@ pub struct GetItemsQueryDTO {
     pub names: Option<NamesGetItemsQueryDTO>,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Default)]
 pub struct GetItemsRequestDTO {
     pub offset: i64,
     pub limit: i64,
     pub query: Option<GetItemsQueryDTO>,
-    pub sort_by: Option<String>,
+    pub sort_by: Option<GetItemsSortByDTO>,
+}
+
+#[derive(Deserialize, Clone, Default)]
+pub struct GetItemsSortByDTO {
+    pub field: String,
+    pub desc: bool,
 }
 
 #[derive(Serialize, Clone)]
@@ -66,6 +72,15 @@ impl Into<GetItemsQuery> for GetItemsQueryDTO {
         };
 
         query
+    }
+}
+
+impl Into<GetItemsSortBy> for GetItemsSortByDTO {
+    fn into(self) -> GetItemsSortBy {
+        GetItemsSortBy {
+            field: self.field,
+            desc: self.desc,
+        }
     }
 }
 
