@@ -221,8 +221,8 @@ mod core_service_tests {
         let query = Some(GetItemsQuery {
             ids: None,
             price: Some(PriceGetItemsQuery {
-                from: 0.0,
-                to: 100.0,
+                from: Some(0.0),
+                to: Some(100.0),
             }),
             names: None,
         });

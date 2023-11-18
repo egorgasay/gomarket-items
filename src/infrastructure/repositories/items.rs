@@ -49,7 +49,13 @@ impl Repository for DieselRepository {
                 }
 
                 if let Some(price) = query.price {
-                    select = select.filter(items::price.between(price.from, price.to));
+                    if let Some(from) = price.from {
+                        select = select.filter(items::price.ge(from));
+                    }
+
+                    if let Some(to) = price.to {
+                        select = select.filter(items::price.le(to));
+                    }
                 }
 
                 if let Some(names) = query.names {
@@ -110,40 +116,36 @@ impl Repository for DieselRepository {
 
 #[cfg(test)]
 mod tests {
+    use std::ops::Deref;
+    use std::sync::{Mutex, RwLock};
     use super::*;
     use crate::infrastructure::databases::postgresql::db_pool;
     use diesel::connection::SimpleConnection;
     use std::thread;
+    use actix_web::web::get;
+    use diesel::r2d2::{ConnectionManager, PooledConnection};
+    use lazy_static::lazy_static;
     use testcontainers::clients;
     use testcontainers::images::postgres;
+    use testcontainers::images::postgres::Postgres;
+    use crate::domain::models::items::PriceGetItemsQuery;
 
-    #[tokio::test]
-    async fn test_get_all_items() {
-        let docker = clients::Cli::default();
-        let postgresql = docker.run(postgres::Postgres::default());
+    fn migrate_tables(mut conn: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
+        let mut conn = conn.lock().unwrap();
 
-        let conn_string = format!(
-            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
-            postgresql.get_host_port_ipv4(5432),
-        );
-
-        let conn = db_pool(conn_string);
-        let mut connection = conn.get().unwrap();
-        let db = Arc::new(DieselRepository::new(Arc::new(conn)));
-
-        connection.batch_execute("CREATE TABLE items (
+        conn.batch_execute("CREATE TABLE items (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
     price DOUBLE PRECISION NOT NULL
 );").unwrap();
-        connection
+        conn
             .batch_execute("CREATE TABLE sizes (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL
 );")
             .unwrap();
-        connection.batch_execute("CREATE TABLE items_sizes (
+        conn.batch_execute("CREATE TABLE items_sizes (
     id BIGSERIAL PRIMARY KEY,
     item_id BIGSERIAL NOT NULL,
     size_id SERIAL NOT NULL,
@@ -151,6 +153,10 @@ mod tests {
     FOREIGN KEY (item_id) REFERENCES items(id),
     FOREIGN KEY (size_id) REFERENCES sizes(id)
 );").unwrap();
+    }
+
+    fn insert_test_data(connection: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
+        let mut connection = connection.lock().unwrap();
 
         connection
             .batch_execute("INSERT INTO items (name, price, description) VALUES ('Item 1', 1000, '')")
@@ -181,8 +187,10 @@ mod tests {
         connection
             .batch_execute("INSERT INTO items_sizes (item_id, size_id, quantity) VALUES (3, 3, 100)")
             .unwrap();
+    }
 
-        let want = vec![
+    fn get_items_wanted() -> Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)> {
+        vec![
             (
                 ItemDiesel {
                     id: 1,
@@ -237,9 +245,58 @@ mod tests {
                     quantity: 100,
                 }],
             ),
-        ];
+        ]
+    }
+
+    #[tokio::test]
+    async fn test_get_items_all() {
+        let docker = clients::Cli::default();
+        let image = postgres::Postgres::default();
+        let container = docker.run(image);
+        let conn_string = format!(
+            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
+            container.get_host_port_ipv4(5432),
+        );
+
+        let pool = db_pool(conn_string);
+        let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
+
+        let connection = pool.get().unwrap();
+        let protected_conn = Arc::new(Mutex::new(connection));
+
+        migrate_tables(protected_conn.clone());
+        insert_test_data(protected_conn);
+        let want = get_items_wanted();
 
         let res = db.get_items(None, None, 0, 10).await.unwrap();
+        assert_eq!(want, res);
+    }
+
+    #[tokio::test]
+    async fn test_filter_by_price() {
+        let docker = clients::Cli::default();
+        let image = postgres::Postgres::default();
+        let container = docker.run(image);
+        let conn_string = format!(
+            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
+            container.get_host_port_ipv4(5432),
+        );
+
+        let pool = db_pool(conn_string);
+        let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
+
+        let connection = pool.get().unwrap();
+        let protected_conn = Arc::new(Mutex::new(connection));
+
+        migrate_tables(protected_conn.clone());
+        insert_test_data(protected_conn);
+        let want = get_items_wanted()[2..].to_vec();
+
+        let res = db.get_items(Some(GetItemsQuery{
+            ids: None,
+            price: Some(PriceGetItemsQuery{ from: Some(3000.0), to: None }),
+            names: None,
+        }), None, 0, 10).await.unwrap();
         assert_eq!(want, res);
     }
 }

@@ -59,8 +59,8 @@ impl Into<GetItemsQuery> for GetItemsQueryDTO {
 
         if let Some(price) = self.price {
             query.price = Some(PriceGetItemsQuery {
-                from: price.from,
-                to: price.to,
+                from: Some(price.from),
+                to: Some(price.to),
             });
         }
 

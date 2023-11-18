@@ -17,8 +17,8 @@ pub struct Size {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct PriceGetItemsQuery {
-    pub from: f64,
-    pub to: f64,
+    pub from: Option<f64>,
+    pub to: Option<f64>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
