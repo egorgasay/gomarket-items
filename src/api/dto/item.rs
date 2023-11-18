@@ -1,26 +1,26 @@
 use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item, NamesGetItemsQuery, PriceGetItemsQuery};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Copy, Clone, Default)]
+#[derive(Serialize, Deserialize, Copy, Clone, Default)]
 pub struct PriceGetItemsQueryDTO {
     pub from: f64,
     pub to: f64,
 }
 
-#[derive(Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct NamesGetItemsQueryDTO {
     pub full: Option<Vec<String>>,
     pub partly: Option<Vec<String>>,
 }
 
-#[derive(Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct GetItemsQueryDTO {
     pub ids: Option<Vec<i64>>,
     pub price: Option<PriceGetItemsQueryDTO>,
     pub names: Option<NamesGetItemsQueryDTO>,
 }
 
-#[derive(Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct GetItemsRequestDTO {
     pub offset: i64,
     pub limit: i64,
@@ -28,25 +28,25 @@ pub struct GetItemsRequestDTO {
     pub sort_by: Option<GetItemsSortByDTO>,
 }
 
-#[derive(Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct GetItemsSortByDTO {
     pub field: String,
     pub desc: bool,
 }
 
-#[derive(Serialize, Clone)]
-pub struct Size {
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct SizeDTO {
     pub count: i32,
     pub name: String,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct ItemDTO {
     pub id: i64,
     pub name: String,
     pub description: String,
     pub price: f64,
-    pub sizes: Vec<Size>,
+    pub sizes: Vec<SizeDTO>,
 }
 
 impl Into<GetItemsQuery> for GetItemsQueryDTO {
@@ -94,7 +94,7 @@ impl From<Item> for ItemDTO {
             sizes: item
                 .sizes
                 .into_iter()
-                .map(|(size, count)| Size {
+                .map(|(size, count)| SizeDTO {
                     name: size.name,
                     count,
                 })

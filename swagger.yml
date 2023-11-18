@@ -7,8 +7,6 @@ tags:
   - name: 'ItemsAPI'
 
 paths:
-  # Items API
-
   /api/v1/items:
     get:
       tags:

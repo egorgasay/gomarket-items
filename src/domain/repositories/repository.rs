@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 pub type RepositoryResult<T> = Result<T, RepositoryError>;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct ResultPaging<T> {
     pub offset: i64,
     pub total: i64,

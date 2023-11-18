@@ -1,11 +1,7 @@
 use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy};
 use async_trait::async_trait;
-use diesel::internal::table_macro::{BoxedSelectStatement, NoFromClause};
-use diesel::pg::Pg;
 use diesel::prelude::*;
-use diesel::sql_types::{Int8, Integer, VarChar};
 use std::sync::Arc;
-use testcontainers::Container;
 
 use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::RepositoryResult;
@@ -116,19 +112,13 @@ impl Repository for DieselRepository {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Deref;
-    use std::sync::{Mutex, RwLock};
+    use std::sync::{Mutex};
     use super::*;
     use crate::infrastructure::databases::postgresql::db_pool;
     use diesel::connection::SimpleConnection;
-    use std::thread;
-    use actix_web::web::get;
     use diesel::r2d2::{ConnectionManager, PooledConnection};
-    use diesel::serialize::IsNull::No;
-    use lazy_static::lazy_static;
     use testcontainers::clients;
     use testcontainers::images::postgres;
-    use testcontainers::images::postgres::Postgres;
     use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery};
 
     fn migrate_tables(mut conn: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {

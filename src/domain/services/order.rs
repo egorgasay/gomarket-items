@@ -1,10 +1,12 @@
 use async_trait::async_trait;
+use mockall::automock;
 
 use crate::domain::error::CommonError;
 use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item};
 use crate::domain::repositories::repository::ResultPaging;
 
 #[async_trait]
+#[cfg_attr(test, automock)]
 pub trait CoreService: Sync + Send {
     async fn get_items(
         &self,
