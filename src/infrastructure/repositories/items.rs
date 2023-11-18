@@ -1,7 +1,11 @@
 use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy};
 use async_trait::async_trait;
+use diesel::internal::table_macro::{BoxedSelectStatement, NoFromClause};
+use diesel::pg::Pg;
 use diesel::prelude::*;
+use diesel::sql_types::{Int8, Integer, VarChar};
 use std::sync::Arc;
+use testcontainers::Container;
 
 use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::RepositoryResult;
@@ -80,7 +84,7 @@ impl Repository for DieselRepository {
                     (&_, _) => select.order_by(items::price.asc()),
                 };
 
-                 select = target
+                select = target
             }
 
             let res = select.load::<ItemDiesel>(conn)?;
@@ -101,5 +105,141 @@ impl Repository for DieselRepository {
         })?;
 
         Ok(out)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::infrastructure::databases::postgresql::db_pool;
+    use diesel::connection::SimpleConnection;
+    use std::thread;
+    use testcontainers::clients;
+    use testcontainers::images::postgres;
+
+    #[tokio::test]
+    async fn test_get_all_items() {
+        let docker = clients::Cli::default();
+        let postgresql = docker.run(postgres::Postgres::default());
+
+        let conn_string = format!(
+            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
+            postgresql.get_host_port_ipv4(5432),
+        );
+
+        let conn = db_pool(conn_string);
+        let mut connection = conn.get().unwrap();
+        let db = Arc::new(DieselRepository::new(Arc::new(conn)));
+
+        connection.batch_execute("CREATE TABLE items (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    description VARCHAR NOT NULL,
+    price DOUBLE PRECISION NOT NULL
+);").unwrap();
+        connection
+            .batch_execute("CREATE TABLE sizes (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL
+);")
+            .unwrap();
+        connection.batch_execute("CREATE TABLE items_sizes (
+    id BIGSERIAL PRIMARY KEY,
+    item_id BIGSERIAL NOT NULL,
+    size_id SERIAL NOT NULL,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (item_id) REFERENCES items(id),
+    FOREIGN KEY (size_id) REFERENCES sizes(id)
+);").unwrap();
+
+        connection
+            .batch_execute("INSERT INTO items (name, price, description) VALUES ('Item 1', 1000, '')")
+            .unwrap();
+        connection
+            .batch_execute("INSERT INTO items (name, price, description) VALUES ('Item 2', 2000, '')")
+            .unwrap();
+        connection
+            .batch_execute("INSERT INTO items (name, price, description) VALUES ('Item 3', 3000, '')")
+            .unwrap();
+
+        connection
+            .batch_execute("INSERT INTO sizes (name) VALUES ('S')")
+            .unwrap();
+        connection
+            .batch_execute("INSERT INTO sizes (name) VALUES ('M')")
+            .unwrap();
+        connection
+            .batch_execute("INSERT INTO sizes (name) VALUES ('L')")
+            .unwrap();
+
+        connection
+            .batch_execute("INSERT INTO items_sizes (item_id, size_id, quantity) VALUES (1, 1, 1)")
+            .unwrap();
+        connection
+            .batch_execute("INSERT INTO items_sizes (item_id, size_id, quantity) VALUES (2, 2, 0)")
+            .unwrap();
+        connection
+            .batch_execute("INSERT INTO items_sizes (item_id, size_id, quantity) VALUES (3, 3, 100)")
+            .unwrap();
+
+        let want = vec![
+            (
+                ItemDiesel {
+                    id: 1,
+                    name: "Item 1".to_string(),
+                    description: "".to_string(),
+                    price: 1000.0,
+                },
+                vec![SizeDiesel {
+                    id: 1,
+                    name: "S".to_string(),
+                }],
+                vec![ItemsSizesDiesel {
+                    id: 1,
+                    item_id: 1,
+                    size_id: 1,
+                    quantity: 1,
+                }],
+            ),
+            (
+                ItemDiesel {
+                    id: 2,
+                    name: "Item 2".to_string(),
+                    description: "".to_string(),
+                    price: 2000.0,
+                },
+                vec![SizeDiesel {
+                    id: 2,
+                    name: "M".to_string(),
+                }],
+                vec![ItemsSizesDiesel {
+                    id: 2,
+                    item_id: 2,
+                    size_id: 2,
+                    quantity: 0,
+                }],
+            ),
+            (
+                ItemDiesel {
+                    id: 3,
+                    name: "Item 3".to_string(),
+                    description: "".to_string(),
+                    price: 3000.0,
+                },
+                vec![SizeDiesel {
+                    id: 3,
+                    name: "L".to_string(),
+                }],
+                vec![ItemsSizesDiesel {
+                    id: 3,
+                    item_id: 3,
+                    size_id: 3,
+                    quantity: 100,
+                }],
+            ),
+        ];
+
+        let res = db.get_items(None, None, 0, 10).await.unwrap();
+        assert_eq!(want, res);
     }
 }
