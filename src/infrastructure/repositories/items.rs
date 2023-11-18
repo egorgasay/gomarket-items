@@ -124,11 +124,12 @@ mod tests {
     use std::thread;
     use actix_web::web::get;
     use diesel::r2d2::{ConnectionManager, PooledConnection};
+    use diesel::serialize::IsNull::No;
     use lazy_static::lazy_static;
     use testcontainers::clients;
     use testcontainers::images::postgres;
     use testcontainers::images::postgres::Postgres;
-    use crate::domain::models::items::PriceGetItemsQuery;
+    use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery};
 
     fn migrate_tables(mut conn: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
         let mut conn = conn.lock().unwrap();
@@ -297,6 +298,119 @@ mod tests {
             price: Some(PriceGetItemsQuery{ from: Some(3000.0), to: None }),
             names: None,
         }), None, 0, 10).await.unwrap();
+        assert_eq!(want, res);
+    }
+
+    #[tokio::test]
+    async fn test_filter_by_full_name() {
+        let docker = clients::Cli::default();
+        let image = postgres::Postgres::default();
+        let container = docker.run(image);
+        let conn_string = format!(
+            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
+            container.get_host_port_ipv4(5432),
+        );
+
+        let pool = db_pool(conn_string);
+        let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
+
+        let connection = pool.get().unwrap();
+        let protected_conn = Arc::new(Mutex::new(connection));
+
+        migrate_tables(protected_conn.clone());
+        insert_test_data(protected_conn);
+        let want = get_items_wanted()[1..2].to_vec();
+
+        let res = db.get_items(Some(GetItemsQuery{
+            ids: None,
+            price: None,
+            names: Some(NamesGetItemsQuery{ full: Some(vec!["Item 2".to_string()]), partly: None }),
+        }), None, 0, 10).await.unwrap();
+        assert_eq!(want, res);
+    }
+
+    #[tokio::test]
+    async fn test_filter_by_name_partly() {
+        let docker = clients::Cli::default();
+        let image = postgres::Postgres::default();
+        let container = docker.run(image);
+        let conn_string = format!(
+            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
+            container.get_host_port_ipv4(5432),
+        );
+
+        let pool = db_pool(conn_string);
+        let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
+
+        let connection = pool.get().unwrap();
+        let protected_conn = Arc::new(Mutex::new(connection));
+
+        migrate_tables(protected_conn.clone());
+        insert_test_data(protected_conn);
+        let want = get_items_wanted()[0..1].to_vec();
+
+        let res = db.get_items(Some(GetItemsQuery{
+            ids: None,
+            price: None,
+            names: Some(NamesGetItemsQuery{ full: None, partly:  Some(vec!["1".to_string()])}),
+        }), None, 0, 10).await.unwrap();
+        assert_eq!(want, res);
+    }
+
+    #[tokio::test]
+    async fn test_filter_by_ids() {
+        let docker = clients::Cli::default();
+        let image = postgres::Postgres::default();
+        let container = docker.run(image);
+        let conn_string = format!(
+            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
+            container.get_host_port_ipv4(5432),
+        );
+
+        let pool = db_pool(conn_string);
+        let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
+
+        let connection = pool.get().unwrap();
+        let protected_conn = Arc::new(Mutex::new(connection));
+
+        migrate_tables(protected_conn.clone());
+        insert_test_data(protected_conn);
+        let want = get_items_wanted()[1..].to_vec();
+
+        let res = db.get_items(Some(GetItemsQuery{
+            ids: Some(vec![2,3]),
+            price: None,
+            names: None,
+        }), None, 0, 10).await.unwrap();
+        assert_eq!(want, res);
+    }
+
+    #[tokio::test]
+    async fn test_sort_by_price_desc() {
+        let docker = clients::Cli::default();
+        let image = postgres::Postgres::default();
+        let container = docker.run(image);
+        let conn_string = format!(
+            "postgresql://postgres:postgres@127.0.0.1:{}/postgres",
+            container.get_host_port_ipv4(5432),
+        );
+
+        let pool = db_pool(conn_string);
+        let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
+
+        let connection = pool.get().unwrap();
+        let protected_conn = Arc::new(Mutex::new(connection));
+
+        migrate_tables(protected_conn.clone());
+        insert_test_data(protected_conn);
+        let mut want = get_items_wanted();
+        want.reverse();
+
+        let res = db.get_items(Some(GetItemsQuery{
+            ids: None,
+            price: None,
+            names: None,
+        }), Some(GetItemsSortBy{ field: "price".to_string(), desc: true }), 0, 10).await.unwrap();
         assert_eq!(want, res);
     }
 }
