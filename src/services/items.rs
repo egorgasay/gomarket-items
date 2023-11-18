@@ -143,13 +143,13 @@ mod core_service_tests {
         mock_repository.expect_get_items().return_once(
             move |q: Option<GetItemsQuery>,
                   sort: Option<GetItemsSortBy>,
-                  lim: i64,
-                  off: i64|
+                  offset: i64,
+                  limit: i64|
                   -> _ {
                 assert!(q.is_none());
                 assert!(sort.is_none());
-                assert_eq!(lim, 10);
-                assert_eq!(off, 0);
+                assert_eq!(offset, 0);
+                assert_eq!(limit, 10);
 
                 Box::pin(async move { Ok(mock_items) })
             },
