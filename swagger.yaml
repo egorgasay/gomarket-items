@@ -7,7 +7,7 @@ tags:
   - name: 'ItemsAPI'
 
 paths:
-  /api/v1/items:
+  /v1/items:
     get:
       tags:
         - ItemsAPI
@@ -149,11 +149,3 @@ components:
                 type: integer
                 format: int64
                 example: 5
-
-  securitySchemes:
-    SessionAuth:
-      type: 'apiKey'
-      in: 'header'
-      name: 'SESSION-ID'
-security:
-  - SessionAuth: []
