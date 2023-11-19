@@ -121,7 +121,7 @@ mod tests {
     use testcontainers::images::postgres;
     use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery};
 
-    fn migrate_tables(mut conn: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
+    fn migrate_tables(conn: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
         let mut conn = conn.lock().unwrap();
 
         conn.batch_execute("CREATE TABLE items (

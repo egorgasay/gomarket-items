@@ -4,7 +4,7 @@ use async_trait::async_trait;
 
 use crate::domain::error::CommonError;
 use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item};
-use crate::domain::repositories::items::{Repository, TodoQueryParams};
+use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::ResultPaging;
 use crate::domain::services::order::CoreService;
 use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SizeDiesel};
@@ -52,18 +52,9 @@ impl CoreService for CoreServiceImpl {
 #[cfg(test)]
 mod core_service_tests {
     use super::*;
-    use crate::domain::error::RepositoryError;
     use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery, Size};
     use crate::domain::repositories::items::MockRepository;
-    use diesel::serialize::IsNull::No;
-    use mockall::mock;
-    use std::arch::aarch64::veor_s8;
-    use std::future::Future;
-    use std::ops::Deref;
-    use std::pin::Pin;
-    use std::process::Output;
     use std::sync::Arc;
-    use std::thread;
 
     fn get_test_data() -> Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)> {
         vec![
