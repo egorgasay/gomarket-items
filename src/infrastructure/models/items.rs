@@ -31,31 +31,11 @@ pub struct ItemsSizesDiesel {
     pub quantity: i32,
 }
 
-fn split_item_to_diesel(t: Item) -> (ItemDiesel, Vec<ItemsSizesDiesel>) {
-    (
-        ItemDiesel {
-            id: t.id,
-            name: t.name,
-            description: t.description,
-            price: t.price,
-        },
-        t.sizes
-            .iter()
-            .map(|s| ItemsSizesDiesel {
-                id: t.id,
-                item_id: t.id,
-                size_id: s.0.id,
-                quantity: s.1,
-            })
-            .collect(),
-    )
-}
-
 impl Into<Item> for (ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>) {
     fn into(self) -> Item {
         let mut sizes: Vec<(Size, i32)> = vec![];
 
-        let find_size_name = Box::new(|x: &Self, isd: &ItemsSizesDiesel| {
+        let find_size_name = Box::new(|_: &Self, isd: &ItemsSizesDiesel| {
             for s in &self.1 {
                 if s.id == isd.size_id {
                     return s.name.clone();
