@@ -47,6 +47,12 @@ impl CoreService for CoreServiceImpl {
             items,
         })
     }
+
+    async fn create_item(&self, item: Item) -> Result<i64, CommonError> {
+        let item_id = self.repository.create_item(item).await?;
+
+        Ok(item_id)
+    }
 }
 
 #[cfg(test)]

@@ -1,8 +1,8 @@
-use actix_web::{App, HttpServer, web};
 use actix_web::middleware::Logger;
-use log::{warn};
-use gomarket_items::api::controllers::items_handler::get_items;
+use actix_web::{web, App, HttpServer};
+use gomarket_items::api::controllers::items_handler::{create_item, get_items};
 use gomarket_items::container::Container;
+use log::warn;
 
 #[cfg(test)]
 mod tests;
@@ -20,7 +20,11 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::from(core_service.clone()))
             .wrap(Logger::default())
-            .service(web::scope("").route("/v1/items", web::get().to(get_items)))
-    }).bind(("0.0.0.0", 8000))?;
+            .service(web::scope("").
+                route("/v1/items", web::get().to(get_items)).
+                route("/v1/items", web::post().to(create_item))
+            )
+    })
+    .bind(("0.0.0.0", 8000))?;
     server.run().await
 }
