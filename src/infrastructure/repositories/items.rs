@@ -7,7 +7,7 @@ use diesel::connection::SimpleConnection;
 use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::RepositoryResult;
 use crate::infrastructure::databases::postgresql::DBConn;
-use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SimpleItemDiesel, SizeDiesel};
+use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SimpleItemDiesel, SimpleItemsSizesDiesel, SimpleSizeDiesel, SizeDiesel};
 use crate::infrastructure::schema::items;
 use crate::infrastructure::schema::items::{description, name, price};
 use crate::infrastructure::schema::items_sizes;
@@ -123,16 +123,34 @@ impl Repository for DieselRepository {
                 price: item.price,
             };
 
-            let size = SizeDiesel {
-                id: 0,
-                name: item.name.clone(),
-            };
-
-            let stmt = diesel::insert_into(items::table)
+            let item_id = diesel::insert_into(items::table)
                 .values(&s_item)
                 .returning(items::id)
                 .get_result(conn)?;
-            Ok(stmt)
+
+            for size in item.sizes {
+                let simple_size = SimpleSizeDiesel {
+                    name: size.0.name,
+                };
+
+                let size_id = diesel::insert_into(sizes::table)
+                    .values(&simple_size)
+                    .on_conflict(sizes::name)
+                    .do_update()
+                    .set(sizes::name.eq(simple_size.name.clone()))
+                    .returning(sizes::id)
+                    .get_result::<i32>(conn)?;
+
+                diesel::insert_into(items_sizes::table)
+                    .values(&SimpleItemsSizesDiesel {
+                        item_id,
+                        size_id,
+                        quantity: size.1,
+                    })
+                    .execute(conn)?;
+            }
+
+            Ok(item_id)
         })?;
 
         Ok(inserted_id)

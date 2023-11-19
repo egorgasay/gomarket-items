@@ -13,7 +13,7 @@ pub struct ItemDiesel {
     pub price: f64,
 }
 
-#[derive(Queryable, Insertable)]
+#[derive(Insertable)]
 #[diesel(table_name = items)]
 #[derive(Clone, PartialEq, Debug)]
 pub struct SimpleItemDiesel {
@@ -31,11 +31,27 @@ pub struct SizeDiesel {
     pub name: String,
 }
 
+#[derive(Insertable)]
+#[diesel(table_name = sizes)]
+#[derive(Clone, PartialEq, Debug)]
+pub struct SimpleSizeDiesel {
+    pub name: String,
+}
+
 #[derive(Queryable, Insertable)]
 #[diesel(table_name = items_sizes)]
 #[derive(Clone, PartialEq, Debug)]
 pub struct ItemsSizesDiesel {
     pub id: i64,
+    pub item_id: i64,
+    pub size_id: i32,
+    pub quantity: i32,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = items_sizes)]
+#[derive(Clone, PartialEq, Debug)]
+pub struct SimpleItemsSizesDiesel {
     pub item_id: i64,
     pub size_id: i32,
     pub quantity: i32,
