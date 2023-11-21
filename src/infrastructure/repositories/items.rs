@@ -159,6 +159,7 @@ impl Repository for DieselRepository {
 
 #[cfg(test)]
 mod tests {
+    use std::ops::DerefMut;
     use super::*;
     use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery};
     use crate::infrastructure::databases::postgresql::db_pool;
@@ -167,6 +168,7 @@ mod tests {
     use std::sync::Mutex;
     use testcontainers::clients;
     use testcontainers::images::postgres;
+    use crate::infrastructure::schema;
 
     fn migrate_tables(conn: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
         let mut conn = conn.lock().unwrap();
@@ -183,7 +185,7 @@ mod tests {
         conn.batch_execute(
             "CREATE TABLE sizes (
     id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL
+    name VARCHAR NOT NULL UNIQUE
 );",
         )
         .unwrap();
@@ -326,7 +328,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_filter_by_price() {
+    async fn test_get_items_filter_by_price() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -365,7 +367,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_filter_by_full_name() {
+    async fn test_get_items_filter_by_full_name() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -404,7 +406,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_filter_by_name_partly() {
+    async fn test_get_items_filter_by_name_partly() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -443,7 +445,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_filter_by_ids() {
+    async fn test_get_items_filter_by_ids() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -479,7 +481,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_sort_by_price_desc() {
+    async fn test_get_items_sort_by_price_desc() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -517,4 +519,5 @@ mod tests {
             .unwrap();
         assert_eq!(want, res);
     }
+
 }

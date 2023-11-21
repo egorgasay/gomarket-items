@@ -1,14 +1,14 @@
 use actix_threadpool::BlockingError;
 use diesel::r2d2;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct CommonError {
     pub message: String,
     pub code: CommonErrorKind,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum CommonErrorKind {
     AlreadyExists,
     NotFound,
@@ -21,7 +21,7 @@ impl std::fmt::Display for CommonError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub struct ApiError(CommonError);
 
 impl From<CommonError> for ApiError {

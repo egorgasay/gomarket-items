@@ -1,4 +1,4 @@
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Item {
     pub id: i64,
     pub name: String,
@@ -7,7 +7,7 @@ pub struct Item {
     pub sizes: Vec<(Size, i32)>,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Size {
     pub id: i32,
     pub name: String,

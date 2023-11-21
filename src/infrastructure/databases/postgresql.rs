@@ -4,6 +4,7 @@ use diesel::r2d2;
 use diesel::r2d2::ConnectionManager;
 
 pub type Pool<T> = r2d2::Pool<ConnectionManager<T>>;
+
 pub type PostgresPool = Pool<diesel::pg::PgConnection>;
 pub type DBConn = PostgresPool;
 

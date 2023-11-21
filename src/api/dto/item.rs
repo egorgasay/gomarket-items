@@ -52,7 +52,7 @@ pub struct ItemDTO {
     pub sizes: Vec<SizeDTO>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct CreateItemResponseDTO {
     pub id: i64,
 }

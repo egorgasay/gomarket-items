@@ -57,12 +57,12 @@ pub struct SimpleItemsSizesDiesel {
     pub quantity: i32,
 }
 
-impl Into<Item> for (ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>) {
-    fn into(self) -> Item {
+impl From<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)> for Item {
+    fn from(value: (ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)) -> Self {
         let mut sizes: Vec<(Size, i32)> = vec![];
 
-        let find_size_name = Box::new(|_: &Self, isd: &ItemsSizesDiesel| {
-            for s in &self.1 {
+        let find_size_name = Box::new(|isd: &ItemsSizesDiesel| {
+            for s in &value.1 {
                 if s.id == isd.size_id {
                     return s.name.clone();
                 }
@@ -70,21 +70,21 @@ impl Into<Item> for (ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>) {
             "".to_string()
         });
 
-        for s in &self.2 {
+        for s in &value.2 {
             sizes.push((
                 Size {
                     id: s.size_id,
-                    name: find_size_name(&self, s),
+                    name: find_size_name(s),
                 },
                 s.quantity,
             ));
         }
 
         Item {
-            id: (&self).0.id,
-            name: (&self).0.name.clone(),
-            description: (&self).0.description.clone(),
-            price: (&self).0.price,
+            id: value.0.id,
+            name: value.0.name.clone(),
+            description: value.0.description.clone(),
+            price: value.0.price,
             sizes,
         }
     }
