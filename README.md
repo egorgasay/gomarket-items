@@ -1,13 +1,17 @@
-# ItemsAPI Service API  ![Rust](https://img.shields.io/badge/Rust-black?style=for-the-badge&logo=rust&logoColor=#E57324) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=Swagger&logoColor=black) ![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+# Items Service API  ![Rust](https://img.shields.io/badge/Rust-black?style=for-the-badge&logo=rust&logoColor=#E57324) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=Swagger&logoColor=black) ![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
 
 ## Overview
-ItemsAPI Service API is a robust and easy-to-use API designed to interact with items in market database.
+Items Service API is part of internet market. It is easy-to-use API designed to interact with items in market database.
+
+<img width="714" alt="image" src="https://github.com/egorgasay/gomarket-items/assets/102957432/ebd2284c-598a-4c11-afdd-17e86346a598">
+
 
 ## Features
 - Retrieve all items
 - Detailed item information including id, name, description, price, and sizes
 - Pagination and sorting support
 - Validation and error handling
+- Insert an item
 
 ## API Documentation
 For detailed API documentation, please refer to the [link](https://egorgasay.github.io/gomarket-items/). It includes comprehensive information about the paths, responses, schemas, and security schemes used in this API.
