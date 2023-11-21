@@ -7,7 +7,6 @@ use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item};
 use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::ResultPaging;
 use crate::domain::services::order::CoreService;
-use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SizeDiesel};
 
 #[derive(Clone)]
 pub struct CoreServiceImpl {
@@ -34,11 +33,7 @@ impl CoreService for CoreServiceImpl {
             .get_items(query, sort_by, offset, limit)
             .await?
             .into_iter()
-            .map(
-                |item: (ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)| -> Item {
-                    item.into()
-                },
-            )
+            .map(Item::from)
             .collect();
 
         Ok(ResultPaging {
@@ -46,6 +41,12 @@ impl CoreService for CoreServiceImpl {
             total: items.len() as i64,
             items,
         })
+    }
+
+    async fn create_item(&self, item: Item) -> Result<i64, CommonError> {
+        let item_id = self.repository.create_item(item).await?;
+
+        Ok(item_id)
     }
 }
 
@@ -55,6 +56,8 @@ mod core_service_tests {
     use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery, Size};
     use crate::domain::repositories::items::MockRepository;
     use std::sync::Arc;
+    use crate::infrastructure::models::items::*;
+    use crate::domain::error::{CommonErrorKind, RepositoryError, RepositoryErrorKind};
 
     fn get_test_data() -> Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)> {
         vec![
@@ -251,6 +254,62 @@ mod core_service_tests {
 
         assert_eq!(res.offset, want_offset);
         assert_eq!(res.total, want_total);
-        assert!(res.items == want_vec);
+        assert_eq!(res.items, want_vec);
+    }
+
+    #[tokio::test]
+    async fn create_item_should_create_item() {
+        let mut mock_repository = MockRepository::new();
+
+        let item = Item {
+            id: 0,
+            name: "Q".to_string(),
+            description: "S".to_string(),
+            price: 100.0,
+            sizes: vec![],
+        };
+
+        let item_backup = item.clone();
+        mock_repository
+            .expect_create_item()
+            .return_once(move |i| {
+                assert_eq!(i, item_backup);
+
+                Box::pin(async move { Ok(1) })
+            });
+
+        let core_service = CoreServiceImpl::new(Arc::new(mock_repository));
+
+        let res = core_service.create_item(item).await.unwrap();
+
+        assert_eq!(res, 1);
+    }
+
+    #[tokio::test]
+    async fn create_item_repo_error() {
+        let mut mock_repository = MockRepository::new();
+
+        let item = Item {
+            id: 0,
+            name: "Q".to_string(),
+            description: "S".to_string(),
+            price: 100.0,
+            sizes: vec![],
+        };
+
+        let item_backup = item.clone();
+        mock_repository
+            .expect_create_item()
+            .return_once(move |i| {
+                assert_eq!(i, item_backup);
+
+                Box::pin(async move { Err(RepositoryError{ message: "x".to_string(), code: RepositoryErrorKind::Unknown }) })
+            });
+
+        let core_service = CoreServiceImpl::new(Arc::new(mock_repository));
+
+        let res = core_service.create_item(item).await.err().unwrap();
+
+        assert_eq!(res, CommonError{ message: "x".to_string(), code: CommonErrorKind::Unknown });
     }
 }

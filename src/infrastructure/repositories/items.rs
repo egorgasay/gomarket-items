@@ -1,4 +1,4 @@
-use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy};
+use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item};
 use async_trait::async_trait;
 use diesel::prelude::*;
 use std::sync::Arc;
@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::RepositoryResult;
 use crate::infrastructure::databases::postgresql::DBConn;
-use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SizeDiesel};
+use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SimpleItemDiesel, SimpleItemsSizesDiesel, SimpleSizeDiesel, SizeDiesel};
 use crate::infrastructure::schema::items;
 use crate::infrastructure::schema::items_sizes;
 use crate::infrastructure::schema::sizes;
@@ -44,12 +44,12 @@ impl Repository for DieselRepository {
                     select = select.filter(items::id.eq_any(ids));
                 }
 
-                if let Some(price) = query.price {
-                    if let Some(from) = price.from {
+                if let Some(q_price) = query.price {
+                    if let Some(from) = q_price.from {
                         select = select.filter(items::price.ge(from));
                     }
 
-                    if let Some(to) = price.to {
+                    if let Some(to) = q_price.to {
                         select = select.filter(items::price.le(to));
                     }
                 }
@@ -108,55 +108,115 @@ impl Repository for DieselRepository {
 
         Ok(out)
     }
+
+    async fn create_item(&self, item: Item) -> RepositoryResult<i64> {
+        let pool = self.pool.clone();
+
+        let mut conn = pool.get()?;
+
+        let inserted_id = conn.transaction::<_, diesel::result::Error, _>(|conn| {
+            let s_item = SimpleItemDiesel {
+                name: item.name,
+                description: item.description,
+                price: item.price,
+            };
+
+            let item_id = diesel::insert_into(items::table)
+                .values(&s_item)
+                .returning(items::id)
+                .get_result(conn)?;
+
+            for size in item.sizes {
+                let simple_size = SimpleSizeDiesel {
+                    name: size.0.name,
+                };
+
+                let size_id = diesel::insert_into(sizes::table)
+                    .values(&simple_size)
+                    .on_conflict(sizes::name)
+                    .do_update()
+                    .set(sizes::name.eq(simple_size.name.clone()))
+                    .returning(sizes::id)
+                    .get_result::<i32>(conn)?;
+
+                diesel::insert_into(items_sizes::table)
+                    .values(&SimpleItemsSizesDiesel {
+                        item_id,
+                        size_id,
+                        quantity: size.1,
+                    })
+                    .execute(conn)?;
+            }
+
+            Ok(item_id)
+        })?;
+
+        Ok(inserted_id)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Mutex};
+    use std::ops::DerefMut;
     use super::*;
+    use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery};
     use crate::infrastructure::databases::postgresql::db_pool;
     use diesel::connection::SimpleConnection;
     use diesel::r2d2::{ConnectionManager, PooledConnection};
+    use std::sync::Mutex;
     use testcontainers::clients;
     use testcontainers::images::postgres;
-    use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery};
+    use crate::infrastructure::schema;
 
     fn migrate_tables(conn: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
         let mut conn = conn.lock().unwrap();
 
-        conn.batch_execute("CREATE TABLE items (
+        conn.batch_execute(
+            "CREATE TABLE items (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
     price DOUBLE PRECISION NOT NULL
-);").unwrap();
-        conn
-            .batch_execute("CREATE TABLE sizes (
+);",
+        )
+        .unwrap();
+        conn.batch_execute(
+            "CREATE TABLE sizes (
     id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL
-);")
-            .unwrap();
-        conn.batch_execute("CREATE TABLE items_sizes (
+    name VARCHAR NOT NULL UNIQUE
+);",
+        )
+        .unwrap();
+        conn.batch_execute(
+            "CREATE TABLE items_sizes (
     id BIGSERIAL PRIMARY KEY,
     item_id BIGSERIAL NOT NULL,
     size_id SERIAL NOT NULL,
     quantity INTEGER NOT NULL,
     FOREIGN KEY (item_id) REFERENCES items(id),
     FOREIGN KEY (size_id) REFERENCES sizes(id)
-);").unwrap();
+);",
+        )
+        .unwrap();
     }
 
     fn insert_test_data(connection: Arc<Mutex<PooledConnection<ConnectionManager<PgConnection>>>>) {
         let mut connection = connection.lock().unwrap();
 
         connection
-            .batch_execute("INSERT INTO items (name, price, description) VALUES ('Item 1', 1000, '')")
+            .batch_execute(
+                "INSERT INTO items (name, price, description) VALUES ('Item 1', 1000, '')",
+            )
             .unwrap();
         connection
-            .batch_execute("INSERT INTO items (name, price, description) VALUES ('Item 2', 2000, '')")
+            .batch_execute(
+                "INSERT INTO items (name, price, description) VALUES ('Item 2', 2000, '')",
+            )
             .unwrap();
         connection
-            .batch_execute("INSERT INTO items (name, price, description) VALUES ('Item 3', 3000, '')")
+            .batch_execute(
+                "INSERT INTO items (name, price, description) VALUES ('Item 3', 3000, '')",
+            )
             .unwrap();
 
         connection
@@ -176,7 +236,9 @@ mod tests {
             .batch_execute("INSERT INTO items_sizes (item_id, size_id, quantity) VALUES (2, 2, 0)")
             .unwrap();
         connection
-            .batch_execute("INSERT INTO items_sizes (item_id, size_id, quantity) VALUES (3, 3, 100)")
+            .batch_execute(
+                "INSERT INTO items_sizes (item_id, size_id, quantity) VALUES (3, 3, 100)",
+            )
             .unwrap();
     }
 
@@ -264,7 +326,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_filter_by_price() {
+    async fn test_get_items_filter_by_price() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -283,16 +345,27 @@ mod tests {
         insert_test_data(protected_conn);
         let want = get_items_wanted()[2..].to_vec();
 
-        let res = db.get_items(Some(GetItemsQuery{
-            ids: None,
-            price: Some(PriceGetItemsQuery{ from: Some(3000.0), to: None }),
-            names: None,
-        }), None, 0, 10).await.unwrap();
+        let res = db
+            .get_items(
+                Some(GetItemsQuery {
+                    ids: None,
+                    price: Some(PriceGetItemsQuery {
+                        from: Some(3000.0),
+                        to: None,
+                    }),
+                    names: None,
+                }),
+                None,
+                0,
+                10,
+            )
+            .await
+            .unwrap();
         assert_eq!(want, res);
     }
 
     #[tokio::test]
-    async fn test_filter_by_full_name() {
+    async fn test_get_items_filter_by_full_name() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -311,16 +384,27 @@ mod tests {
         insert_test_data(protected_conn);
         let want = get_items_wanted()[1..2].to_vec();
 
-        let res = db.get_items(Some(GetItemsQuery{
-            ids: None,
-            price: None,
-            names: Some(NamesGetItemsQuery{ full: Some(vec!["Item 2".to_string()]), partly: None }),
-        }), None, 0, 10).await.unwrap();
+        let res = db
+            .get_items(
+                Some(GetItemsQuery {
+                    ids: None,
+                    price: None,
+                    names: Some(NamesGetItemsQuery {
+                        full: Some(vec!["Item 2".to_string()]),
+                        partly: None,
+                    }),
+                }),
+                None,
+                0,
+                10,
+            )
+            .await
+            .unwrap();
         assert_eq!(want, res);
     }
 
     #[tokio::test]
-    async fn test_filter_by_name_partly() {
+    async fn test_get_items_filter_by_name_partly() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -339,16 +423,27 @@ mod tests {
         insert_test_data(protected_conn);
         let want = get_items_wanted()[0..1].to_vec();
 
-        let res = db.get_items(Some(GetItemsQuery{
-            ids: None,
-            price: None,
-            names: Some(NamesGetItemsQuery{ full: None, partly:  Some(vec!["1".to_string()])}),
-        }), None, 0, 10).await.unwrap();
+        let res = db
+            .get_items(
+                Some(GetItemsQuery {
+                    ids: None,
+                    price: None,
+                    names: Some(NamesGetItemsQuery {
+                        full: None,
+                        partly: Some(vec!["1".to_string()]),
+                    }),
+                }),
+                None,
+                0,
+                10,
+            )
+            .await
+            .unwrap();
         assert_eq!(want, res);
     }
 
     #[tokio::test]
-    async fn test_filter_by_ids() {
+    async fn test_get_items_filter_by_ids() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -367,16 +462,24 @@ mod tests {
         insert_test_data(protected_conn);
         let want = get_items_wanted()[1..].to_vec();
 
-        let res = db.get_items(Some(GetItemsQuery{
-            ids: Some(vec![2,3]),
-            price: None,
-            names: None,
-        }), None, 0, 10).await.unwrap();
+        let res = db
+            .get_items(
+                Some(GetItemsQuery {
+                    ids: Some(vec![2, 3]),
+                    price: None,
+                    names: None,
+                }),
+                None,
+                0,
+                10,
+            )
+            .await
+            .unwrap();
         assert_eq!(want, res);
     }
 
     #[tokio::test]
-    async fn test_sort_by_price_desc() {
+    async fn test_get_items_sort_by_price_desc() {
         let docker = clients::Cli::default();
         let image = postgres::Postgres::default();
         let container = docker.run(image);
@@ -396,11 +499,23 @@ mod tests {
         let mut want = get_items_wanted();
         want.reverse();
 
-        let res = db.get_items(Some(GetItemsQuery{
-            ids: None,
-            price: None,
-            names: None,
-        }), Some(GetItemsSortBy{ field: "price".to_string(), desc: true }), 0, 10).await.unwrap();
+        let res = db
+            .get_items(
+                Some(GetItemsQuery {
+                    ids: None,
+                    price: None,
+                    names: None,
+                }),
+                Some(GetItemsSortBy {
+                    field: "price".to_string(),
+                    desc: true,
+                }),
+                0,
+                10,
+            )
+            .await
+            .unwrap();
         assert_eq!(want, res);
     }
+
 }

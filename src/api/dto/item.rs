@@ -1,4 +1,6 @@
-use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item, NamesGetItemsQuery, PriceGetItemsQuery};
+use crate::domain::models::items::{
+    GetItemsQuery, GetItemsSortBy, Item, NamesGetItemsQuery, PriceGetItemsQuery, Size,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Copy, Clone, Default)]
@@ -42,11 +44,17 @@ pub struct SizeDTO {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct ItemDTO {
-    pub id: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<i64>,
     pub name: String,
     pub description: String,
     pub price: f64,
     pub sizes: Vec<SizeDTO>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
+pub struct CreateItemResponseDTO {
+    pub id: i64,
 }
 
 impl Into<GetItemsQuery> for GetItemsQueryDTO {
@@ -84,10 +92,34 @@ impl Into<GetItemsSortBy> for GetItemsSortByDTO {
     }
 }
 
+impl Into<Item> for ItemDTO {
+    fn into(self) -> Item {
+        Item {
+            id: self.id.unwrap_or(0),
+            name: self.name,
+            description: self.description,
+            price: self.price,
+            sizes: self
+                .sizes
+                .into_iter()
+                .map(|size| {
+                    (
+                        Size {
+                            id: 0,
+                            name: size.name,
+                        },
+                        size.count,
+                    )
+                })
+                .collect(),
+        }
+    }
+}
+
 impl From<Item> for ItemDTO {
     fn from(item: Item) -> ItemDTO {
         ItemDTO {
-            id: item.id,
+            id: Some(item.id),
             name: item.name,
             description: item.description,
             price: item.price,

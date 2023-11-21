@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+#[allow(unused_imports)]
 use mockall::automock;
 
 use crate::domain::error::CommonError;
@@ -15,4 +16,6 @@ pub trait CoreService: Sync + Send {
         offset: i64,
         limit: i64,
     ) -> Result<ResultPaging<Item>, CommonError>;
+
+    async fn create_item(&self, item: Item) -> Result<i64, CommonError>;
 }

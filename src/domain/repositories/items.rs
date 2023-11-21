@@ -1,4 +1,4 @@
-use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy};
+use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item};
 use crate::domain::repositories::repository::{
     QueryParams, RepositoryResult, DEFAULT_LIMIT, DEFAULT_OFFSET,
 };
@@ -35,4 +35,6 @@ pub trait Repository: Send + Sync {
         offset: i64,
         limit: i64,
     ) -> RepositoryResult<Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)>>;
+
+    async fn create_item(&self, item: Item) -> RepositoryResult<i64>;
 }
