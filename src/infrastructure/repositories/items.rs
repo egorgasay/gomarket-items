@@ -2,14 +2,12 @@ use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item};
 use async_trait::async_trait;
 use diesel::prelude::*;
 use std::sync::Arc;
-use diesel::connection::SimpleConnection;
 
 use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::RepositoryResult;
 use crate::infrastructure::databases::postgresql::DBConn;
 use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SimpleItemDiesel, SimpleItemsSizesDiesel, SimpleSizeDiesel, SizeDiesel};
 use crate::infrastructure::schema::items;
-use crate::infrastructure::schema::items::{description, name, price};
 use crate::infrastructure::schema::items_sizes;
 use crate::infrastructure::schema::sizes;
 

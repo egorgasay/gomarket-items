@@ -7,7 +7,6 @@ use crate::domain::models::items::{GetItemsQuery, GetItemsSortBy, Item};
 use crate::domain::repositories::items::Repository;
 use crate::domain::repositories::repository::ResultPaging;
 use crate::domain::services::order::CoreService;
-use crate::infrastructure::models::items::{ItemDiesel, ItemsSizesDiesel, SizeDiesel};
 
 #[derive(Clone)]
 pub struct CoreServiceImpl {
@@ -57,6 +56,7 @@ mod core_service_tests {
     use crate::domain::models::items::{NamesGetItemsQuery, PriceGetItemsQuery, Size};
     use crate::domain::repositories::items::MockRepository;
     use std::sync::Arc;
+    use crate::infrastructure::models::items::*;
     use crate::domain::error::{CommonErrorKind, RepositoryError, RepositoryErrorKind};
 
     fn get_test_data() -> Vec<(ItemDiesel, Vec<SizeDiesel>, Vec<ItemsSizesDiesel>)> {

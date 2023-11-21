@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+#[allow(unused_imports)]
 use mockall::automock;
 
 use crate::domain::error::CommonError;
