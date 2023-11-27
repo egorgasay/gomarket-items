@@ -311,7 +311,7 @@ mod tests {
             container.get_host_port_ipv4(5432),
         );
 
-        let pool = db_pool(conn_string);
+        let pool = db_pool(conn_string, 10);
         let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
 
         let connection = pool.get().unwrap();
@@ -335,7 +335,7 @@ mod tests {
             container.get_host_port_ipv4(5432),
         );
 
-        let pool = db_pool(conn_string);
+        let pool = db_pool(conn_string, 10);
         let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
 
         let connection = pool.get().unwrap();
@@ -374,7 +374,7 @@ mod tests {
             container.get_host_port_ipv4(5432),
         );
 
-        let pool = db_pool(conn_string);
+        let pool =db_pool(conn_string, 10);
         let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
 
         let connection = pool.get().unwrap();
@@ -413,7 +413,7 @@ mod tests {
             container.get_host_port_ipv4(5432),
         );
 
-        let pool = db_pool(conn_string);
+        let pool =db_pool(conn_string, 10);
         let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
 
         let connection = pool.get().unwrap();
@@ -452,7 +452,7 @@ mod tests {
             container.get_host_port_ipv4(5432),
         );
 
-        let pool = db_pool(conn_string);
+        let pool =db_pool(conn_string, 10);
         let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
 
         let connection = pool.get().unwrap();
@@ -488,7 +488,7 @@ mod tests {
             container.get_host_port_ipv4(5432),
         );
 
-        let pool = db_pool(conn_string);
+        let pool =db_pool(conn_string, 10);
         let db = Arc::new(DieselRepository::new(Arc::new(pool.clone())));
 
         let connection = pool.get().unwrap();
