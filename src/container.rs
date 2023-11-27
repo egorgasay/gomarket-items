@@ -19,7 +19,7 @@ impl Container {
         let database_url = env::var(POSTGRESQL_DB_URI)
             .expect(&*format!("{value} must be set", value = POSTGRESQL_DB_URI));
         let pool_size =  env::var(POSTGRESQL_POOL_SIZE)
-            .unwrap_or_else(|e | -> String {
+            .unwrap_or_else(|_ | -> String {
                 warn!("{value} doesn't exist! using default = {default}",
                     value = POSTGRESQL_POOL_SIZE, default = POSTGRESQL_POOL_SIZE_DEFAULT);
                 "10".to_string()
